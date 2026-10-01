@@ -2,7 +2,7 @@ jpsType: update
 jpsVersion: '1.1'
 name: Addon for EdgePort CDN
 description: Addon for EdgePort CDN
-baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-1
+baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-2
 
 onInstall:
   - install-edgeport-CDN

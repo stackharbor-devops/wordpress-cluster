@@ -2,8 +2,8 @@ jpsType: update
 jpsVersion: '1.1'
 name: Multisites addon for WordPress cluster
 description: Multisites addon for WordPress cluster
-logo: https://raw.githubusercontent.com/stackharbor-devops/wordpress-cluster/sh-1/images/wp-cluster.png
-baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-1
+logo: https://raw.githubusercontent.com/stackharbor-devops/wordpress-cluster/sh-2/images/wp-cluster.png
+baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-2
 settings:
   main:
     fields:
