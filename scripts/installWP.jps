@@ -4,7 +4,7 @@ name: WordPress Core Installation
 description: WordPress Core Installation
 
 mixins:
- - https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-2/configs/vers.yaml
+ - https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-3/configs/vers.yaml
 
 globals:
   WP_ADMIN_PASS: ${settings.wp_admin_pass}
