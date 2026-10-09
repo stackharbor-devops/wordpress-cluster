@@ -119,11 +119,11 @@ COMPUTE_TYPE=$(grep "COMPUTE_TYPE=" /etc/jelastic/metainf.conf | cut -d"=" -f2)
 cd ${SERVER_WEBROOT};
 
 if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
-    ${WP} plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
+    ${WP} plugin install litespeed-cache --version=7.9 --activate --path=${SERVER_WEBROOT}
     CACHE_FLUSH="${WP} litespeed-purge all --path=${SERVER_WEBROOT}; rm -rf /var/www/webroot/.cache/vhosts/Jelastic/* "
     WPCACHE='lscwp';
 elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginx"* ]] ; then
-    ${WP} plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
+    ${WP} plugin install w3-total-cache --version=2.10.5 --activate --path=${SERVER_WEBROOT}
     CACHE_FLUSH="${WP} w3-total-cache flush all --path=${SERVER_WEBROOT}; /var/www/webroot/.cache/* "
     WPCACHE="w3tc";
 else
