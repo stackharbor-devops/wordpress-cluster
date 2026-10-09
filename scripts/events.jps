@@ -1,7 +1,7 @@
 type: update
 id: wordpress-cluster-events
 name: WordPress Cluster Events
-baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-4
+baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-5
 
 onAfterScaleOut[nodeGroup:bl]: setupCacheSync
 
