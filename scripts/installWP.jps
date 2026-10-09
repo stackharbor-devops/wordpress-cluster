@@ -59,7 +59,7 @@ actions:
   installScripts:
     - cmd[cp]: |-
         [ ! -d $HOME/bin ] && mkdir $HOME/bin;
-        curl -o $HOME/bin/wp https://fastly.jsdelivr.net/gh/wp-cli/builds@gh-pages/phar/wp-cli.phar && chmod +x $HOME/bin/wp;
+        curl -o $HOME/bin/wp https://fastly.jsdelivr.net/gh/wp-cli/builds@05989a431e982caf17cd94508ff9b4c5fb12ae44/phar/wp-cli.phar && chmod +x $HOME/bin/wp;
         echo "apache_modules:" > ~/bin/wp-cli.yml;
         echo "  - mod_rewrite" >> ~/bin/wp-cli.yml;
         echo "export PATH=$PATH:$HOME/bin/" >> $HOME/.bash_profile;
@@ -83,7 +83,7 @@ actions:
           mv /var/www/webroot/ROOT/wp-config.php /tmp; sed -i "s/.*'wp-settings.php';.*/require_once ABSPATH . 'wp-jelastic.php';\n&/" /tmp/wp-config.php; mv /tmp/wp-config.php /var/www/webroot/ROOT;
           wp plugin install w3-total-cache --version=${globals.version_w3total} --activate --path=/var/www/webroot/ROOT &>> /var/log/run.log;
           wp cache flush --path=/var/www/webroot/ROOT &>> /var/log/run.log;
-          wp plugin install nginx-cache --activate --path=/var/www/webroot/ROOT &>> /var/log/run.log;
+          wp plugin install nginx-cache --version=1.0.8 --activate --path=/var/www/webroot/ROOT &>> /var/log/run.log;
           wp cache flush --path=/var/www/webroot/ROOT &>> /var/log/run.log;
           wp db query "INSERT INTO wp_options(option_name,option_value,autoload) VALUES('nginx_cache_path','/var/www/webroot/ROOT/.cache','yes');" --path=/var/www/webroot/ROOT &>> /var/log/run.log;
           wp db query "INSERT INTO wp_options(option_name,option_value,autoload) VALUES('nginx_auto_purge',1,'yes');" --path=/var/www/webroot/ROOT &>> /var/log/run.log;
