@@ -11,7 +11,7 @@ description:
   short: WordPress Cluster with built-in kit v2 for choosing optimal servers, database clustering type, scaling mode and a set of advanced features for highly-loaded projects
 logo: /images/wp-cluster-kit.svg
 
-baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-3
+baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-4
 
 globals:
   cdnUrl: https://fastly.jsdelivr.net/gh
@@ -162,7 +162,7 @@ settings:
       markup: ""
 
 mixins:
- - https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-3/configs/vers.yaml
+ - https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-4/configs/vers.yaml
  - /scripts/common.yml
 
 onInstall:
@@ -184,7 +184,7 @@ onInstall:
         var actions = [];
         if ('${settings.le-addon:false}' == 'true')
           actions.push({
-            jps: "${globals.cdnUrl}/stackharbor-devops/lets-encrypt@sh-3/manifest.jps",
+            jps: "${globals.cdnUrl}/stackharbor-devops/lets-encrypt@sh-4/manifest.jps",
             nodeGroup: "bl",
             skipEmail: "true",
             settings: {
@@ -280,12 +280,12 @@ actions:
   optimization:
     - log: Load Balancers and App servers optimization
     - install:
-      - jps: ${globals.cdnUrl}/stackharbor-devops/templates@sh-3/config_v2.jps
+      - jps: ${globals.cdnUrl}/stackharbor-devops/templates@sh-4/config_v2.jps
         settings:
           targetGroup: bl
           targetNodes: bl
           optimization: wordpress
-      - jps: ${globals.cdnUrl}/stackharbor-devops/templates@sh-3/config_v2.jps
+      - jps: ${globals.cdnUrl}/stackharbor-devops/templates@sh-4/config_v2.jps
         settings:
           targetGroup: cp
           targetNodes: cp
