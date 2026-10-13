@@ -1,7 +1,7 @@
 type: update
 id: wordpress-cluster-events
 name: WordPress Cluster Events
-baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-5.1
+baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-5.2
 
 # Stack Harbor (sh-5.2): the app servers trust the ADC's X-Forwarded-Proto
 # and X-Forwarded-For (scripts/setupProxyTrust.jps, its own add-on with its own

@@ -11,7 +11,7 @@ description:
   short: WordPress Cluster with built-in kit v2 for choosing optimal servers, database clustering type, scaling mode and a set of advanced features for highly-loaded projects
 logo: /images/wp-cluster-kit.svg
 
-baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-5.1
+baseUrl: https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-5.2
 
 globals:
   cdnUrl: https://fastly.jsdelivr.net/gh
@@ -162,7 +162,7 @@ settings:
       markup: ""
 
 mixins:
- - https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-5.1/configs/vers.yaml
+ - https://fastly.jsdelivr.net/gh/stackharbor-devops/wordpress-cluster@sh-5.2/configs/vers.yaml
  - /scripts/common.yml
 
 onInstall:
