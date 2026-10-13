@@ -1,0 +1,55 @@
+type: update
+id: stackharbor-proxy-trust
+name: Trust the Load Balancer's Forwarded Headers
+description: |
+  Stack Harbor (sh-5.2). The LiteSpeed Web ADC in front of the app servers
+  ends TLS and proxies to them over HTTP:80. It sends X-Forwarded-Proto and
+  X-Forwarded-For, but LiteSpeed on the app servers ignored both, so
+  WordPress saw every request as plain HTTP from the ADC's own address: WP
+  Admin redirected to itself forever (FORCE_SSL_ADMIN with is_ssl() false),
+  and brute-force protection and the WAF saw one client, the ADC.
+  This sets LiteSpeed's "Use Client IP in Header" to "Trusted IP Only"
+  (useIpInProxyHeader 2) and marks the platform's private ranges trusted in
+  the server's access control, so only a request from inside the platform
+  network (the ADC) may set the client address and the HTTPS scheme.
+  Idempotent: a node already set is left alone and not restarted.
+  Re-applied on cp scale-out and redeploy, which replace httpd_config.xml.
+  Install it on an existing LiteSpeed Cluster to fix that site in place.
+
+onInstall: setupProxyTrust
+
+onAfterScaleOut[nodeGroup:cp]: setupProxyTrust
+
+onAfterRedeployContainer[nodeGroup:cp]: setupProxyTrust
+
+actions:
+  setupProxyTrust:
+    - if (/litespeed/.test("${nodes.cp.nodeType}")):
+        forEach(n:nodes.cp):
+          cmd[${@n.id}]: |-
+            C=/var/www/conf/httpd_config.xml; X=/usr/bin/xmlstarlet; changed=0;
+            [ -f "$C" ] || { echo "proxy-trust: no $C"; exit 1; };
+            cp -p "$C" "$C.before-proxy-trust" 2>/dev/null || true;
+            cur=$($X sel -t -v 'httpServerConfig/useIpInProxyHeader' "$C" 2>/dev/null);
+            if [ "$cur" != "2" ]; then
+              if $X sel -Q -t -c 'httpServerConfig/useIpInProxyHeader' "$C"; then
+                $X ed --inplace -u 'httpServerConfig/useIpInProxyHeader' -v 2 "$C";
+              else
+                $X ed --inplace -s 'httpServerConfig' -t elem -n useIpInProxyHeader -v 2 "$C";
+              fi;
+              changed=1;
+            fi;
+            $X sel -Q -t -c 'httpServerConfig/security' "$C" || $X ed --inplace -s 'httpServerConfig' -t elem -n security "$C";
+            $X sel -Q -t -c 'httpServerConfig/security/accessControl' "$C" || $X ed --inplace -s 'httpServerConfig/security' -t elem -n accessControl "$C";
+            $X sel -Q -t -c 'httpServerConfig/security/accessControl/allow' "$C" || $X ed --inplace -s 'httpServerConfig/security/accessControl' -t elem -n allow -v ALL "$C";
+            allow=$($X sel -t -v 'httpServerConfig/security/accessControl/allow' "$C");
+            new="$allow";
+            for r in 10.0.0.0/8T 172.16.0.0/12T 192.168.0.0/16T; do
+              case ", $new," in *", $r,"*) ;; *) new="$new, $r";; esac;
+            done;
+            if [ "$new" != "$allow" ]; then
+              $X ed --inplace -u 'httpServerConfig/security/accessControl/allow' -v "$new" "$C";
+              changed=1;
+            fi;
+            if [ "$changed" = 1 ]; then sudo -n /var/www/bin/lswsctrl restart >/dev/null 2>&1 || sudo -n /bin/jem service restart >/dev/null 2>&1; fi;
+            echo "proxy-trust: useIpInProxyHeader=$($X sel -t -v 'httpServerConfig/useIpInProxyHeader' "$C") changed=$changed";
