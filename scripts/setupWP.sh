@@ -256,25 +256,46 @@ if [ $multisite == 'true' ] ; then
           ${WP} plugin activate w3-total-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log;
           ;;
     lscwp)
+          # Stack Harbor: the network's object cache uses the backend and address the
+          # single-site step configured (setupPlugins: --objectcache true with the kit's
+          # CACHE_HOST/CACHE_PORT): Memcached, on the Standalone node's local socket
+          # (/var/run/memcached/memcached.sock, port 0) or the Cluster's shared `cache`
+          # node (port 11211). addons/multisite.jps calls this script without them, so
+          # they are read back from the site's own LiteSpeed Cache options before the
+          # conversion. Upstream wrote object-kind 1 (Redis) and /var/run/redis/redis.sock,
+          # which these nodes do not run.
+          if [[ -z "${CACHE_HOST}" ]]; then
+            CACHE_HOST=$(${WP} option get litespeed.conf.object-host --path=${SERVER_WEBROOT} 2>>${lOG} || true)
+            CACHE_PORT=$(${WP} option get litespeed.conf.object-port --path=${SERVER_WEBROOT} 2>>${lOG} || true)
+          fi
           ${WP} plugin deactivate litespeed-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log;
           [[ ${mode} == 'subdir' ]] && ${WP} core multisite-convert --path=${SERVER_WEBROOT} &>> /var/log/run.log;
           [[ ${mode} == 'subdom' ]] && ${WP} core multisite-convert --path=${SERVER_WEBROOT} --subdomains &>> /var/log/run.log;
           ${WP} plugin activate litespeed-cache --network --path=${SERVER_WEBROOT} &>> /var/log/run.log;
-	  ${WP} cache flush --path=${SERVER_WEBROOT};
-	  echo "Configuring litespeed.conf.cache" >> /var/log/run.log;
-          ${WP} db query "UPDATE wp_sitemeta set meta_value = 1 where meta_key = 'litespeed.conf.cache'" --path=${SERVER_WEBROOT} &>> /var/log/run.log;
-	  ${WP} db query "select meta_value from wp_sitemeta where meta_key = 'litespeed.conf.cache'" --path=${SERVER_WEBROOT} &>> /var/log/run.log;
-
-	  echo "Configuring litespeed.conf.object" >> /var/log/run.log;
-          ${WP} db query "UPDATE wp_sitemeta set meta_value = 1 where meta_key = 'litespeed.conf.object'" --path=${SERVER_WEBROOT} &>> /var/log/run.log;
-	  echo "Configuring litespeed.conf.object-kind" >> /var/log/run.log;
-          ${WP} db query "UPDATE wp_sitemeta set meta_value = 1 where meta_key = 'litespeed.conf.object-kind'" --path=${SERVER_WEBROOT} &>> /var/log/run.log;
-
-	  echo "Configuring litespeed.conf.object-host" >> /var/log/run.log;
-          ${WP} db query "UPDATE wp_sitemeta set meta_value = '/var/run/redis/redis.sock' where meta_key = 'litespeed.conf.object-host'" --path=${SERVER_WEBROOT} &>> /var/log/run.log;
-
-	  echo "Configuring litespeed.conf.object-port" >> /var/log/run.log;
-	  ${WP} db query "UPDATE wp_sitemeta set meta_value = 0 where meta_key = 'litespeed.conf.object-port'" --path=${SERVER_WEBROOT} &>> /var/log/run.log;
+          ${WP} cache flush --path=${SERVER_WEBROOT};
+          # Network options through LiteSpeed Cache's own setter (Conf::network_update),
+          # not raw SQL on wp_sitemeta: it writes the database AND the object cache that
+          # caches site options. Then its files are rewritten from them in a fresh
+          # process (Activation::update_files): the object-cache.php drop-in and
+          # .litespeed_conf.dat, which the drop-in reads its backend from. Upstream's raw
+          # UPDATE left the file on Memcached and the network options on Redis, so the
+          # next settings save or plugin upgrade (both rewrite the file) moved the object
+          # cache to a socket that does not exist and it stopped persisting (OBSERVED
+          # 2026-10-13, sh-5 Standalone).
+          echo "Configuring the network's LiteSpeed Cache (cache, object cache: ${CACHE_HOST:-none}:${CACHE_PORT:-})" >> /var/log/run.log;
+          SH_OC_HOST="${CACHE_HOST}" SH_OC_PORT="${CACHE_PORT}" ${WP} eval '
+            $c = \LiteSpeed\Conf::cls();
+            $c->network_update("cache", 1);
+            $h = (string) getenv("SH_OC_HOST");
+            if ($h !== "") {
+              $c->network_update("object", true);
+              $c->network_update("object-kind", false);
+              $c->network_update("object-host", $h);
+              $c->network_update("object-port", (int) getenv("SH_OC_PORT"));
+            }
+          ' --path=${SERVER_WEBROOT} &>> /var/log/run.log;
+          ${WP} cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log;
+          ${WP} eval '\LiteSpeed\Activation::cls()->update_files();' --path=${SERVER_WEBROOT} &>> /var/log/run.log;
           ;;
   esac
   ${WP} cache flush --path=${SERVER_WEBROOT};
